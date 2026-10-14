@@ -1,0 +1,176 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Inspiration Wall</title>
+
+    <style>
+        body {
+            background-color: bisque;
+            text-align: center;
+        }
+
+        .calm {
+            background-color: aqua;
+        }
+
+        .happy {
+            background-color: yellow;
+        }
+
+        .focused {
+            background-color: green;
+        }
+
+        .loved {
+            background-color: pink;
+        }
+
+        li {
+            margin: 10px;
+            padding: 10px;
+        }
+    </style>
+
+    <!-- Firebase libraries -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+</head>
+
+<body>
+
+    <h1>Inspiration Wall</h1>
+
+    <button onclick="setTheme('calm')">Calm</button>
+    <button onclick="setTheme('happy')">Happy</button>
+    <button onclick="setTheme('focused')">Focused</button>
+
+    <br><br>
+
+    <input id="word" placeholder="Write inspiration message..." minlength="4" maxlength="50">
+
+    <button onclick="addMessage()">Post</button>
+
+    <ul id="messagelist"></ul>
+
+
+    <script>
+
+        var firebaseConfig = {
+            apiKey: "AIzaSyCv5BXzqcZJx_RJabzFDZ9sZs44bty6utA",
+            authDomain: "interative-wall.firebaseapp.com",
+            databaseURL: "https://interative-wall-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "interative-wall",
+            storageBucket: "interative-wall.firebasestorage.app",
+            messagingSenderId: "671719825494",
+            appId: "1:671719825494:web:cf37b56e737e22f8ebdbf7"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+
+
+
+        var database = firebase.database();
+        var messages = database.ref("messages");
+
+
+   
+        function addMessage() {
+
+            var text = document.getElementById("word").value;
+
+            if (text.trim() !== "") {
+
+                messages.push({
+                    text: text,
+                    loved: false
+                });
+
+                document.getElementById("word").value = "";
+            }
+        }
+
+        function getData() {
+
+            messages.on("value", function (snapshot) {
+
+                var messageList = document.getElementById("messagelist");
+
+                messageList.innerHTML = "";
+
+                snapshot.forEach(function (childSnapshot) {
+
+                    var message = childSnapshot.val();
+                    var key = childSnapshot.key;
+
+                    var li = document.createElement("li");
+
+                    if (message.loved === true) {
+                        li.className = "loved";
+                    }
+
+                    li.innerHTML =
+                        message.text +
+                        ' <button onclick="toggleLoved(\'' + key + '\')">❤️</button>' +
+                        ' <button onclick="deleteMessage(\'' + key + '\')">×</button>';
+
+                    messageList.appendChild(li);
+                });
+
+            });
+        }
+
+
+       
+        function toggleLoved(key) {
+
+            var message = messages.child(key);
+
+            message.once("value", function (snapshot) {
+
+                var data = snapshot.val();
+
+                message.update({
+                    loved: !data.loved
+                });
+
+            });
+        }
+
+
+       
+        function deleteMessage(key) {
+
+            messages.child(key).remove();
+
+        }
+
+
+        function setTheme(theme) {
+
+            document.body.className = theme;
+
+            localStorage.setItem("theme", theme);
+
+        }
+
+
+        var savedTheme = localStorage.getItem("theme");
+
+        if (savedTheme) {
+            document.body.className = savedTheme;
+        }
+
+
+   
+        getData();
+
+    </script>
+
+</body>
+
+</html>
